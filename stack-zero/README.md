@@ -72,3 +72,38 @@ Executing the program in debug mode with radare
 ```
 λ r2 -r profile.rr2 -d ../../stack-zero
 ```
+
+- *-d*: debug mode.
+- *-r*: specify rarun2 profile to load 
+
+Once the binary has been loaded we analyze for symbols, functions etc.
+
+```
+[0x7ffff7dc5d34]> aas
+
+```
+
+Now that the binary has been analyzed we can execute commands while referencing the symbols instead of the hexadecimal address numbers.
+
+```
+[0x7ffff7dc5d34]> dcu?
+Usage: dcu   Continue until address
+| dcu.             Alias for dcu $$ (continue until current address
+| dcu address      Continue until address
+| dcu [..tail]     Continue until the range
+| dcu [from] [to]  Continue until the range
+
+[0x7ffff7dc5d34]> dcu main
+Continue until 0x0040060d using 1 bpsize
+hit breakpoint at: 40060d
+
+```
+
+- *dcu*: *d*ebug *c*ontinue *u*ntil.
+
+This command will execute the code until it hits the main function, leaving us in the begging of the code instructions.
+
+### Visual Mode
+
+![alt text](images/r2-graph.png "VV command inside r2")
+
