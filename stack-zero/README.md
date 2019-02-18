@@ -145,41 +145,9 @@ So these instructions manipulate the data that is stored in `eax`, the `imp.gets
 Lets view the stack and figure out what is there and how to modify the contents before and after executing the gets instruction:
 
 - Before:
-    ```
-    .----------------------------------------------------------------------------------.----------------------------------------------------------------------------------..------------------------------------------------------------------------------.
-|[x] Disassembly                                                                   |   Stack                                                                          ||   StackRefs                                                                  |
-|             ;-- main:                                                            | - offset -       0 1  2 3  4 5  6 7  8 9  A B  C D  E F  0123456789ABCDEF        || 0x7fffffffc240  0x00007fffffffc2f8   ........ @rsp rbx stack R W X 'call 0x7f|
-|             ;-- r13:                                                             | 0x7fffffffc240  f8c2 ffff ff7f 0000 0000 0000 0100 0000  ................        || 0x7fffffffc248  0x0000000100000000   ........                                |
-|             0x0040060d      55             push rbp                              | 0x7fffffffc250  0000 0000 0000 0000 0000 0000 0000 0000  ................        || 0x7fffffffc250  0x0000000000000000   ........ @rdi rdx                       |
-|             0x0040060e      4889e5         mov rbp, rsp                          | 0x7fffffffc260  0000 0000 0000 0000 0000 0000 0000 0000  ................        || 0x7fffffffc258  0x0000000000000000   ........ rdx                            |
-|             0x00400611      4883ec60       sub rsp, 0x60               ; '`'     | 0x7fffffffc270  0000 0000 0000 0000 f8c2 ffff ff7f 0000  ................        || 0x7fffffffc260  0x0000000000000000   ........ rdx                            |
-|             0x00400615      897dac         mov dword [rbp - 0x54], edi           | 0x7fffffffc280  0100 0000 0000 0000 08c3 ffff ff7f 0000  ................        || 0x7fffffffc268  0x0000000000000000   ........ rdx                            |
-|             0x00400618      488975a0       mov qword [rbp - 0x60], rsi           | 0x7fffffffc290  0d06 4000 0000 0000 0000 0000 0000 0000  ..@.............        || 0x7fffffffc270  0x0000000000000000   ........ rdx                            |
-|             0x0040061c      bfb0064000     mov edi, str.Welcome_to_phoenix_stack_| 0x7fffffffc2a0  0100 0000 0000 0000 62fd d8f7 ff7f 0000  ........b.......        || 0x7fffffffc278  0x00007fffffffc2f8   ........ rbx stack R W X 'call 0x7ffffff|
-|             0x00400621      e84afeffff     call sym.imp.puts           ;[1]      | 0x7fffffffc2b0  0000 0000 0000 0000 f0c2 ffff ff7f 0000  ................        |.------------------------------------------------------------------------------.
-|             0x00400626      c745fc000000.  mov dword [rbp - 4], 0                | 0x7fffffffc2c0  0000 0000 0000 0000 c8db fff7 ff7f 0000  ................        ||   Registers                                                                  |
-|             0x0040062d      488d45b0       lea rax, [rbp - 0x50]                 | 0x7fffffffc2d0  003e 0000 0100 0004 d904 4000 0000 0000  .>........@.....        ||  rax 0x7fffffffc250       rbx 0x7fffffffc2f8       rcx 0x7ffff7db6d07        |
-|             0x00400631      4889c7         mov rdi, rax                          | 0x7fffffffc2e0  0000 0000 0000 0000 b604 4000 0000 0000  ..........@.....        ||  rdx 0x00000000            r8 0x7ffff7ffb300        r9 0x7fffffffc20f        |
-|             ;-- rip:                                                             | 0x7fffffffc2f0  0100 0000 0000 0000 e8c9 ffff ff7f 0000  ................        ||  r10 0x00000001           r11 0x00000206           r12 0x7fffffffc308        |
-|             0x00400634      e827feffff     call sym.imp.gets           ;[2]      | 0x7fffffffc300  0000 0000 0000 0000 f9c9 ffff ff7f 0000  ................        ||  r13 0x0040060d           r14 0x00000000           r15 0x00000000            |
-|             0x00400639      8b45fc         mov eax, dword [rbp - 4]              | 0x7fffffffc310  0fca ffff ff7f 0000 23ca ffff ff7f 0000  ........#.......        ||  rsi 0x7fffffffc180       rdi 0x7fffffffc250       rsp 0x7fffffffc240        |
-|             0x0040063c      85c0           test eax, eax                         | 0x7fffffffc320  59ca ffff ff7f 0000 8cca ffff ff7f 0000  Y...............        ||  rbp 0x7fffffffc2a0       rip 0x00400634           rflags 1PZI               |
-|         ,=< 0x0040063e      740c           je 0x40064c                 ;[3]      | 0x7fffffffc330  d2ca ffff ff7f 0000 e9ca ffff ff7f 0000  ................        || orax 0xffffffffffffffff                                                      |
-|         |   0x00400640      bf00074000     mov edi, str.Well_done__the__changeme_|                                                                                  ||                                                                              |
-|         |   0x00400645      e826feffff     call sym.imp.puts           ;[1]      |                                                                                  |.------------------------------------------------------------------------------.
-|        ,==< 0x0040064a      eb0a           jmp 0x400656                ;[4]      |                                                                                  ||   RegisterRefs                                                               |
-|        |`-> 0x0040064c      bf38074000     mov edi, str.Uh_oh___changeme__has_not|                                                                                  ||  R0   rax 0x7fffffffc250      rdi stack R W X 'add byte [rax], al' '[stack]' |
-|        |    0x00400651      e81afeffff     call sym.imp.puts           ;[1]      |                                                                                  ||       rbx 0x7fffffffc2f8      rbx stack R W X 'call 0x7fffffffc2c6' '[stack]'|
-|        `--> 0x00400656      bf00000000     mov edi, 0                            |                                                                                  ||  A3   rcx 0x7ffff7db6d07      (/opt/phoenix/x86_64-linux-musl/lib/libc.so) rc|
-|             0x0040065b      e820feffff     call sym.imp.exit           ;[5]      |                                                                                  ||  A2   rdx 0x0                 rdx                                            |
-|             ;-- __do_global_ctors_aux:                                           |                                                                                  ||  A4    r8 0x7ffff7ffb300      (/opt/phoenix/x86_64-linux-musl/lib/libc.so) r8|
-|             0x00400660      488b05390820.  mov rax, qword obj.__CTOR_LIST    ; [0|                                                                                  ||  A5    r9 0x7fffffffc20f      r9 stack R W X 'or al, byte [rax]' '[stack]'   |
-|             0x00400667      4883f8ff       cmp rax, 0xffffffffffffffff           |                                                                                  ||       r10 0x1                 (.comment) r10                                 |
-|         ,=< 0x0040066b      7433           je 0x4006a0                 ;[6]      |                                                                                  ||       r11 0x206               (.symtab) r11                                  |
-`----------------------------------------------------------------------------------'----------------------------------------------------------------------------------'`------------------------------------------------------------------------------'
-    ```
 
-
+![alt text](images/before.png "Before entering the gets function")
+![alt text](images/after.png "After leaving the gets function")
 
 
 
