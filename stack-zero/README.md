@@ -112,7 +112,7 @@ The code that makes the decision is
 test eax, eax 
 je 0x40064c
 ```
-The `test eax,eax` instructions basically means that if eax is zero then do something since test is esentially mapped to a binary AND bit operation. There are two scenarios that can make the variable take different paths `eax = 0 ` and `eax != 0`.
+The `test eax,eax` instructions basically means that if eax is zero then it will set the 'ZF' flag to 1, The 'je' operation means if `ZF=1` go to address `0x40064c`. Since test is esentially mapped to a binary AND bit operation. There are two scenarios that can make the variable take different paths `eax = 0 ` and `eax != 0`.
 
 If `eax = 0011`
 
@@ -138,16 +138,31 @@ So lets take a look at what sets `eax` and figure out how to manipulate it.
 call sym.imp.gets
 mov eax, dword [local_4h]
 ```
-So these instructions manipulate the data that is stored in `eax`, the `imp.gets` allows the user to input data, and that data is stored in `eax`
+These instructions manipulate the data that is stored in `eax`, the `imp.gets` allows the user to input data, and that data is stored in `eax`
 
 ## Stack
 
 Lets view the stack and figure out what is there and how to modify the contents before and after executing the gets instruction:
 
-- Before:
+- Before: `eax = 0`
 
 ![alt text](images/before.png "Before entering the gets function")
+
+- After: `eax = 0x41614141`
 ![alt text](images/after.png "After leaving the gets function")
 
+The stack has been overwriten with the values of the pattern.txt (Bruijn Sequence), this means that the gets() function is a very unsafe function since it allows for arbitrary code injection.
+Continuing to run the instruction 
 
+```
+mov eax, dword [local_4h]
+```
 
+The eax has now changed to `0x41614141` which is part of the injected string from the Bruijin Sequence
+```
+<pre>
+... AAWAAXAAYAAZA<b>AaAA<b>bAAcAAd ...
+</pre>
+```
+
+Since `eax` is no longer 0 the code doesn't go to `0x40064c` and goes the next instruction allowing us to reach the `Well_done` message and exploiting the code.
