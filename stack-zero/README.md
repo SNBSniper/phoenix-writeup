@@ -160,9 +160,7 @@ mov eax, dword [local_4h]
 
 The eax has now changed to `0x41614141` which is part of the injected string from the Bruijin Sequence
 ```
-<pre>
-... AAWAAXAAYAAZA<b>AaAA<b>bAAcAAd ...
-</pre>
+... AAWAAXAAYAAZA[AaAA]bAAcAAd ...
 ```
 
-Since `eax` is no longer 0 the code doesn't go to `0x40064c` and goes the next instruction allowing us to reach the `Well_done` message and exploiting the code.
+Since `eax` is no longer 0, the code doesn't jump to `0x40064c` and goes the next instruction allowing us to reach the `Well_done` message and exploiting the code.
