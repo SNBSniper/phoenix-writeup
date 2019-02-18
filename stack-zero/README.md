@@ -56,13 +56,13 @@ va       true
 
 ```
 
-The arch (1) let's us know which architecture this binary belongs to, in this case it is a intel x86 instruction set 64bit architecture.
+- [1]: The arch let's us know which architecture this binary belongs to, in this case it is a intel x86 instruction set 64bit architecture.
 
-The canary protection (2)  named for their analogy to a canary in a coal mine, are used to detect a stack buffer overflow before execution of malicious code can occur. This method works by placing a small integer, the value of which is randomly chosen at program start, in memory just before the stack return pointer. Most buffer overflows overwrite memory from lower to higher memory addresses, so in order to overwrite the return pointer (and thus take control of the process) the canary value must also be overwritten. This value is checked to make sure it has not changed before a routine uses the return pointer on the stack.[2] This technique can greatly increase the difficulty of exploiting a stack buffer overflow because it forces the attacker to gain control of the instruction pointer by some non-traditional means such as corrupting other important variables on the stack.
+- [2]: The canary protection  named for their analogy to a canary in a coal mine, are used to detect a stack buffer overflow before execution of malicious code can occur. This method works by placing a small integer, the value of which is randomly chosen at program start, in memory just before the stack return pointer. Most buffer overflows overwrite memory from lower to higher memory addresses, so in order to overwrite the return pointer (and thus take control of the process) the canary value must also be overwritten. This value is checked to make sure it has not changed before a routine uses the return pointer on the stack.[2] This technique can greatly increase the difficulty of exploiting a stack buffer overflow because it forces the attacker to gain control of the instruction pointer by some non-traditional means such as corrupting other important variables on the stack.
 
-The nx (3) flag let us known if the stack is executable, if this value is set to false, then it means that code can be executed from the stack, most of the time this value is enabled to prevent code execution from the stack.
+- [3]: The nx flag let us known if the stack is executable, if this value is set to false, then it means that code can be executed from the stack, most of the time this value is enabled to prevent code execution from the stack.
 
-The pic flag (4) stands for Position Independent Code and it tell us if the code will be placed at random locations in memory if the value is true.
+- [4]: The pic flag stands for Position Independent Code and it tell us if the code will be placed at random locations in memory if the value is true.
 
 
 ### Run the program 
@@ -103,7 +103,44 @@ hit breakpoint at: 40060d
 
 This command will execute the code until it hits the main function, leaving us in the begging of the code instructions.
 
-### Visual Mode
-
+### Solution
+Visual mode gives you a block view of the code, this is helpful to view all the branching paths the execution could take. Pressing **VV** while seeking to the main function, this will output the following 
 ![alt text](images/r2-graph.png "VV command inside r2")
+This shows a block of normal execution with a branching path, depending if true or false then joins back to exit.
+The code that makes the decision is
+```
+test eax, eax 
+je 0x40064c
+```
+The `test eax,eax` instructions basically means that if eax is zero then do something since test is esentially mapped to a binary AND operation whose results are shown below
+
+| 0 | 0 | 1 | 1 |
+|---|---|---|---|
+| 0 | 0 | 1 | 1 |
+| - | - | - | - |
+| 0 | 0 | 1 | 1 |
+
+
+| 0 | 0 | 0 | 0 |
+|---|---|---|---|
+| 0 | 0 | 0 | 0 |
+| - | - | - | - |
+| 0 | 0 | 0 | 0 |
+
+This means that `test eax eax` will result in 0 if `eax = 0` and set the `ZF` flag (Zero Flag) and if `eax != 0` then `test eax eax` will not set the `ZF` flag and thus the conditions for branching have been discovered.
+
+So lets take a look at what sets `eax` and figure out how to manipulate it.
+```
+call sym.imp.gets
+mov eax, dword [local_4h]
+```
+So these instructions manipulate the data that is stored in `eax`, the `imp.gets` allows the user to input data, and that data is stored in `eax`
+
+## Stack
+
+Lets view the stack and figure out what is there and how to modify the contents
+
+
+
+
 
