@@ -143,10 +143,10 @@ These instructions manipulate the data that is stored in `eax`, the `imp.gets` a
 
 The value that `eax` is loading from: `[rbp - 4]` is actually set by the instruction at `0x00400626` with the value of `0`, so the normal execution is:
 
-- mov dword [rbp - 4], 0  -> set memory location to 0
-- call sym.imp.gets -> reads from STDIN and sets the pointer to the begging of the string in `eax`
-- mov eax, dword [rbp - 4] -> set the previous 0 value stored in `[rbp - 4]` back into eax
-- test eax,eax -> make the comparision
+- `mov dword [rbp - 4], 0` -> set memory location to 0
+- `call sym.imp.gets` -> reads from STDIN and sets the pointer to the begging of the string in `eax`
+- `mov eax, dword [rbp - 4]` -> set the previous 0 value stored in `[rbp - 4]` back into eax
+- `test eax,eax` -> make the comparision
 
 ## Stack
 
