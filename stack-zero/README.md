@@ -112,7 +112,7 @@ The code that makes the decision is
 test eax, eax 
 je 0x40064c
 ```
-The `test eax,eax` instructions basically means that if eax is zero then it will set the 'ZF' flag to 1, The 'je' operation means if `ZF=1` go to address `0x40064c`. Since test is esentially mapped to a binary AND bit operation. There are two scenarios that can make the variable take different paths `eax = 0 ` and `eax != 0`.
+The `test eax,eax` instructions basically means that if eax is zero then it will set the `ZF` flag (Zero Flag)  to 1, The `je` operation means if `ZF=1` go to address `0x40064c`. Since test is esentially mapped to a binary AND bit operation. There are two scenarios that can make the variable take different paths `eax = 0 ` and `eax != 0`.
 
 If `eax = 0011`
 
@@ -131,14 +131,22 @@ If `eax = 0000`
 | - | - | - | - |
 | 0 | 0 | 0 | 0 |
 
-This means that `test eax eax` will result in 0 if `eax = 0` and set the `ZF` flag (Zero Flag) and if `eax != 0` then `test eax eax` will not set the `ZF` flag and thus the conditions for branching have been discovered.
+This means that `test eax eax` will result in 0 if `eax = 0` and set the `ZF` flag and if `eax != 0` then `test eax eax` will not set the `ZF` flag and thus the conditions for branching have been discovered.
+
 
 So lets take a look at what sets `eax` and figure out how to manipulate it.
 ```
 call sym.imp.gets
-mov eax, dword [local_4h]
+mov eax, dword [rbp - 4]
 ```
 These instructions manipulate the data that is stored in `eax`, the `imp.gets` allows the user to input data, and that data is stored in `eax`
+
+The value that `eax` is loading from: `[rbp - 4]` is actually set by the instruction at `0x00400626` with the value of `0`, so the normal execution is:
+
+- mov dword [rbp - 4], 0  -> set memory location to 0
+- call sym.imp.gets -> reads from STDIN and sets the pointer to the begging of the string in `eax`
+- mov eax, dword [rbp - 4] -> set the previous 0 value stored in `[rbp - 4]` back into eax
+- test eax,eax -> make the comparision
 
 ## Stack
 
